@@ -399,10 +399,12 @@ impl Hub {
                             None => Some(breadcrumb)
                         };
                         if let Some(breadcrumb) = breadcrumb_opt {
-                            scope.breadcrumbs.push_back(breadcrumb);
+                            scope.breadcrumbs = scope.breadcrumbs.push_back(breadcrumb);
                         }
                         while scope.breadcrumbs.len() > options.max_breadcrumbs {
-                            scope.breadcrumbs.pop_front();
+                            if let Some((_, new)) = scope.breadcrumbs.pop_front() {
+                                scope.breadcrumbs = new;
+                            }
                         }
                     }
                 }

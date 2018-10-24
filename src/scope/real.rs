@@ -60,7 +60,7 @@ pub struct Scope {
     pub(crate) extra: im::HashMap<String, Value>,
     pub(crate) tags: im::HashMap<String, String>,
     pub(crate) contexts: im::HashMap<String, Option<Context>>,
-    pub(crate) event_processors: im::Vector<Arc<EventProcessor>>,
+    pub(crate) event_processors: im::Vector<EventProcessor>,
 }
 
 impl fmt::Debug for Scope {
@@ -185,32 +185,35 @@ impl Scope {
     /// Sets a tag to a specific value.
     #[cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
     pub fn set_tag<V: ToString>(&mut self, key: &str, value: V) {
-        self.tags.insert(key.to_string(), value.to_string());
+        self.tags = self.tags.insert(key.to_string(), value.to_string());
     }
 
     /// Removes a tag.
     pub fn remove_tag(&mut self, key: &str) {
-        self.tags.remove(key);
+        // annoyingly this needs a String :(
+        self.tags = self.tags.remove(&key.to_string());
     }
 
     /// Sets a context for a key.
     pub fn set_context<C: Into<Context>>(&mut self, key: &str, value: C) {
-        self.contexts.insert(key.to_string(), Some(value.into()));
+        self.contexts = self.contexts.insert(key.to_string(), Some(value.into()));
     }
 
     /// Removes a context for a key.
     pub fn remove_context(&mut self, key: &str) {
-        self.contexts.insert(key.to_string(), None);
+        // annoyingly this needs a String :(
+        self.contexts = self.contexts.insert(&key.to_string(), None);
     }
 
     /// Sets a extra to a specific value.
     pub fn set_extra(&mut self, key: &str, value: Value) {
-        self.extra.insert(key.to_string(), value);
+        self.extra = self.extra.insert(key.to_string(), value);
     }
 
     /// Removes a extra.
     pub fn remove_extra(&mut self, key: &str) {
-        self.extra.remove(key);
+        // annoyingly this needs a String :(
+        self.extra = self.extra.remove(&key.to_string());
     }
 
     /// Add an event processor to the scope.
@@ -218,7 +221,7 @@ impl Scope {
         &mut self,
         f: Box<Fn(Event<'static>) -> Option<Event<'static>> + Send + Sync>,
     ) {
-        self.event_processors.push_back(Arc::new(f));
+        self.event_processors = self.event_processors.push_back(f);
     }
 
     /// Applies the contained scoped data to fill an event.
